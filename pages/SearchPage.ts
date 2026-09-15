@@ -10,6 +10,7 @@ export class SearchPage {
   readonly driverAgeDropdownTrigger: Locator;
   readonly driverAgeOtherRadio: Locator;
   readonly driverAgeOtherInput: Locator;
+  readonly acceptCookiesButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -23,6 +24,7 @@ export class SearchPage {
       .locator('#ct-compact-age-type-listboxdriverAgeDropdown')
       .getByText('Other');
     this.driverAgeOtherInput = page.locator('#ageTextInput-searchcars');
+    this.acceptCookiesButton = page.locator('[data-testid="cookieAccept"]');
   }
 
   async selectPickupLocation(searchText: string, optionText: string) {
@@ -44,6 +46,10 @@ export class SearchPage {
     await this.driverAgeDropdownTrigger.click();
     await this.driverAgeOtherRadio.click();
     await this.driverAgeOtherInput.fill(age.toString());
+  }
+
+  async acceptCookies(){
+    await this.acceptCookiesButton.click();
   }
 
 
