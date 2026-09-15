@@ -1,6 +1,6 @@
 {
   "pickupLocation": "Barcelona Airport",
-  "pickupLocationOption": "Barcelona - airport - terminal 1",
+  "pickupLocationOption": "Barcelona - Airport - Terminal 1 (BCN)",
   "driverAge": 40,
   "insurance": ["Basic", "Premium"]
 }

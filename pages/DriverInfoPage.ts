@@ -6,7 +6,7 @@ export class DriverInfoPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.coverageText = page.locator('[data-auto-id="txtInsuranceDetails"]');
+    this.coverageText = page.locator('[data-auto-id="txtInsuranceDetails"]').first();
   }
 
   async getCoverageText(): Promise<string> {

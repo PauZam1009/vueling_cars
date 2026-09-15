@@ -28,6 +28,7 @@ export class SearchPage {
   }
 
   async selectPickupLocation(searchText: string, optionText: string) {
+    await this.pickupLocationInput.click();
     await this.pickupLocationInput.fill(searchText);
     await this.locationDropdownOptions
       .filter({ hasText: optionText })
