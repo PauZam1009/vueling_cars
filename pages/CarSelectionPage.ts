@@ -1,27 +1,35 @@
-import { Page, Locator } from '@playwright/test';
+import { Page, Locator, expect } from '@playwright/test';
 
 export class CarSelectionPage {
   readonly page: Page;
-  readonly carouselItems: Locator;
-  readonly bookButton: Locator;
+  readonly suvCards: Locator;
+  readonly detailsContinueButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
-    this.carouselItems = page.locator('.ct-cars-carousel-car');
-    this.bookButton = page.locator('[data-auto-id="bookButton"]');
+    
+    this.suvCards = page.locator('[data-car-group="suv"]');
+    
+    this.detailsContinueButton = page.locator('[data-auto-id="btnPaymentFooter"]');
+  }
+
+  async waitForSuvResults() {
+    
+    await expect(async () => {
+      await this.page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+      await expect(this.suvCards.first()).toBeAttached();
+    }).toPass({ timeout: 20000 });
   }
 
   async selectFirstSuv() {
-    await this.carouselItems
-      .filter({ hasText: 'SUV' })
-      .first()
-      .click();
+    const suv = this.suvCards.first();
+    await suv.scrollIntoViewIfNeeded();
+   
+    await suv.click();
   }
 
-  async confirmCarSelection(): Promise<Page> {
-    const popupPromise = this.page.waitForEvent('popup');
-    await this.bookButton.first().click();
-    const newPage = await popupPromise;
-    return newPage;
+  async confirmCarSelection() {
+    
+    await this.detailsContinueButton.click();
   }
 }

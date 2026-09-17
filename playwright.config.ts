@@ -25,7 +25,10 @@ export default defineConfig({
   reporter: 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
-
+    /**
+     * Requirement: "Screen resolution: Both tests must run at a resolution of 430 x 932."
+    
+     */
     viewport: { width: 430, height: 932 },
     /* Base URL to use in actions like `await page.goto('')`. */
     baseURL: 'https://cars.vueling.com/',
@@ -38,7 +41,13 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        
+        viewport: { width: 430, height: 932 },
+        isMobile: true,
+        hasTouch: true,
+      },
     },
 /*
     {

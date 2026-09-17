@@ -1,112 +1,71 @@
-import { test, expect, Page, BrowserContext } from "@playwright/test";
-import { SearchPage } from "../pages/SearchPage";
-import { CarSelectionPage } from "../pages/CarSelectionPage";
-import { FarePage } from "../pages/FarePage";
-import { DriverInfoPage } from "../pages/DriverInfoPage";
+import { test, expect, Page } from "@playwright/test";
+import {
+    SearchPage,
+    CarSelectionPage,
+    FarePage,
+    DriverInfoPage
+} from "../pages";
 import testData from '../fixtures/testData.json';
 
-async function selectFareAndVerify(
+let _searchPage: SearchPage;
+let _carSelectionPage: CarSelectionPage;
+let _farePage: FarePage;
+let _driverInfoPage: DriverInfoPage;
 
-  page: Page,
-  context: BrowserContext,
-  fareType: 'Basic' | 'Premium'
-) {
+test.describe("Car Rental - Fare Selection", () => {
+    test.beforeEach(async ({ page }) => {
+        _searchPage = new SearchPage(page);
+        _carSelectionPage = new CarSelectionPage(page);
 
-  let searchPage: SearchPage;
-  let carSelectionPage: CarSelectionPage;
-  let newPage: Page;
+        await test.step('The search page loads correctly', async () => {
+            await page.goto('/');
+            await _searchPage.acceptCookies();
 
-  await test.step('The search page loads correctly', async () => {
-    await page.goto('/');
-    searchPage = new SearchPage(page);
-    await searchPage.acceptCookies();
+            await expect(page).toHaveURL(/cars\.vueling\.com/);
+            await expect(_searchPage.pickupLocationTrigger).toBeVisible();
+        });
 
-    await expect(page).toHaveURL(/cars\.vueling\.com/);
-    await expect(searchPage.pickupLocationInput).toBeVisible();
+        await test.step('Search for a car', async () => {
+            const pickupDate = new Date();
+            pickupDate.setDate(pickupDate.getDate() + 3);
 
-  });
+            const returnDate = new Date();
+            returnDate.setDate(returnDate.getDate() + 5);
 
-  await test.step('Search for a car', async () => {
-    const pickupDate = new Date();
-    pickupDate.setDate(pickupDate.getDate() + 3);
+            await _searchPage.searchCar(
+                testData.pickupLocation,
+                testData.pickupLocationOption,
+                pickupDate,
+                returnDate,
+                testData.driverAge
+            );
+        });
 
-    const returnDate = new Date();
-    returnDate.setDate(returnDate.getDate() + 5);
+        await test.step('Select the first SUV', async () => {
+            
+            await _carSelectionPage.waitForSuvResults();
+            await expect(_carSelectionPage.suvCards.first()).toBeVisible();
 
-    await searchPage.searchCar(
-      testData.pickupLocation,
-      testData.pickupLocationOption,
-      pickupDate,
-      returnDate,
-      testData.driverAge
-    );
-
-  });
-
-  await test.step('Select the first SUV', async () => {
-    carSelectionPage = new CarSelectionPage(page);
-
-    await expect(
-      carSelectionPage.carouselItems.filter({ hasText: 'SUV' }).first()
-    ).toBeVisible();
-
-    await carSelectionPage.selectFirstSuv();
-    newPage = await carSelectionPage.confirmCarSelection();
-  });
-
-  await test.step(`Select ${fareType} Plan and verify coverage`, async () => {
-    const currentPage = context.pages()[context.pages().length - 1];
-    const farePage = new FarePage(currentPage);
-
-    const fareButton = fareType === 'Basic' ? farePage.basicFareButton : farePage.premiumFareButton;
-    await expect(fareButton).toBeVisible();
-
-    await farePage.selectFare(fareType);
-    await currentPage.waitForURL(/details-with-payment/);
-
-    const driverInfoPage = new DriverInfoPage(currentPage);
-    const coverageText = await driverInfoPage.getCoverageText();
-
-    const expectedCoverageText = fareType === 'Basic' ? 'Limited' : 'Premium';
-    await expect(coverageText).toBe(expectedCoverageText);
-
-  });
-
-}
-
-  test.describe('Car Rental - Fare Selection', () => {
-
-    test.beforeAll(async () => {
-      console.log("Starting the suite");
-
+            await _carSelectionPage.selectFirstSuv();
+            
+            await _carSelectionPage.confirmCarSelection();
+            _farePage = new FarePage(page);
+            _driverInfoPage = new DriverInfoPage(page);
+        });
     });
 
-    test.afterAll(async () => {
-      console.log("Finishing the Suite");
+   
+    for (const { type, expectedCoverage } of testData.insurance) {
+        test(`${type} fare selection`, async ({ page }) => {
+            await test.step(`Select ${type} Plan and verify coverage`, async () => {
+                await expect(_farePage.fareButtons[type]).toBeVisible();
 
-    });
+                await _farePage.selectFare(type);
 
-    test.beforeEach(async ({ page, context }) => {
-      await context.clearCookies();
+                await page.waitForURL(/payment/);
 
-    });
-
-    test.afterEach(async ({ page, context }) => {
-      const pages = context.pages();
-      for (const p of pages.slice(1)) {
-        await p.close();
-      }
-
-    });
-
-    test('Basic fare selection', async ({ page, context }) => {
-      await selectFareAndVerify(page, context, 'Basic');
-
-      });
-
-      test('Premium fare selection', async ({ page, context }) => {
-        await selectFareAndVerify(page, context,  'Premium');
-
-      });
-
-  });
+                await expect(_driverInfoPage.coverageIndicators[type]).toHaveText(expectedCoverage);
+            });
+        });
+    }
+});

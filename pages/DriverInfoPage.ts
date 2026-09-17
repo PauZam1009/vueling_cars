@@ -2,17 +2,18 @@ import { Page, Locator } from '@playwright/test';
 
 export class DriverInfoPage {
   readonly page: Page;
-  readonly coverageText: Locator;
+  
+  readonly coverageIndicators: Record<string, Locator>;
 
   constructor(page: Page) {
     this.page = page;
-    this.coverageText = page.locator('[data-auto-id="txtInsuranceDetails"]').first();
+    this.coverageIndicators = {
+      
+      Basic: page.locator('[data-auto-id="insuranceUpsellPanelHeaderText"]'),
+      
+      Premium: page.locator('.ct-line-item-type--insurance').first(),
+    };
   }
 
-  async getCoverageText(): Promise<string> {
-    const text = await this.coverageText.innerText();
 
-    return text;
-    
-  }
 }
